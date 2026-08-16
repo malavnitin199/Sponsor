@@ -66,11 +66,6 @@ export default function AgentPanel({
     if (!navFocus) return;
     if (navFocus === 'TEAM') {
       setActivePanelTab('LEDGER');
-      if (navFocus === 'PAYOUTS') {
-        setTimeout(() => {
-          document.getElementById('sbr-payouts-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-      }
     } else if (navFocus === 'INVENTORY') {
       setActivePanelTab('INVENTORY');
     }

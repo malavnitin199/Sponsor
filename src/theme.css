@@ -313,6 +313,10 @@
 .dark .hover\:bg-rose-700:hover { background-color: #be123c; }
 .dark .hover\:bg-rose-950:hover { background-color: rgba(244, 63, 94, 0.18); }
 
+/* group-hover is its own variant — `.dark .hover\:bg-stone-50` does NOT cover it.
+   Used by the sales-report pinned column, which must repaint with the row. */
+.dark .group:hover .group-hover\:bg-stone-50 { background-color: var(--sbr-surface-2); }
+
 .dark .hover\:text-stone-900:hover,
 .dark .hover\:text-stone-800:hover { color: var(--sbr-text); }
 .dark .hover\:text-stone-700:hover { color: var(--sbr-text-2); }

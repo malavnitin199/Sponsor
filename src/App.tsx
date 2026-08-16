@@ -30,7 +30,8 @@ import {
   IdCard,
   UserCog,
   Layers,
-  Share2
+  Share2,
+  FileSpreadsheet
 } from 'lucide-react';
 
 /**
@@ -50,6 +51,8 @@ const NAV_ITEMS = [
   // Payouts is a dedicated page (PayoutsDesk) rather than a dashboard scroll —
   // same reasoning as /profile: the dashboard is too long on mobile.
   { key: 'PAYOUTS', label: 'Payouts', icon: Wallet, route: '/payouts' },
+  // Sales as a dense data table — the dashboard card view hides fields on mobile.
+  { key: 'SALES_REPORT', label: 'Sales Report', icon: FileSpreadsheet, route: '/sales-report' },
   { key: 'SPONSOR_CODE', label: 'Sponsor Reference Code', icon: Share2, anchor: 'sbr-sponsor-code' },
   { key: 'EDIT_DETAIL', label: 'Edit Detail', icon: UserCog, route: '/profile', anchor: 'profile-edit-section' },
 ];
@@ -65,6 +68,7 @@ import AgentPanel from './components/AgentPanel';
 import LoginScreen from './components/LoginScreen';
 import ProfilePage from './components/ProfilePage';
 import PayoutsDesk from './components/PayoutsDesk';
+import SalesReport from './components/SalesReport';
 import { normalizeUsers, normalizeUsersWithSales, rebuildPayoutsFromSales } from './lib/designation';
 import { 
   seedDatabase, 
@@ -138,6 +142,7 @@ export default function App() {
       setActiveNav(
         next.startsWith('/profile') ? 'PROFILE'
         : next.startsWith('/payouts') ? 'PAYOUTS'
+        : next.startsWith('/sales-report') ? 'SALES_REPORT'
         : 'HOME'
       );
     };
@@ -1545,8 +1550,30 @@ export default function App() {
             </h1>
           </div>
 
-          {/* Right: theme switch */}
-          <div className="flex-1 flex justify-end">
+          {/* Right: workspace switch (desktop) + theme switch */}
+          <div className="flex-1 flex justify-end items-center gap-2">
+            {session?.role === 'ADMIN' && (
+              <div className="hidden md:flex p-0.5 bg-stone-100 border border-stone-200 rounded-lg shadow-xs shrink-0">
+                <button
+                  onClick={() => setActiveRole('ADMIN')}
+                  title="Owner / Admin workspace"
+                  className={`px-2 py-1 rounded text-[10.5px] font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                    activeRole === 'ADMIN' ? 'bg-emerald-800 text-white shadow-xs' : 'text-stone-500 hover:text-stone-900'
+                  }`}
+                >
+                  👑 <span className="hidden lg:inline">Owner/Admin</span>
+                </button>
+                <button
+                  onClick={() => setActiveRole('AGENT')}
+                  title="Channel Partner workspace"
+                  className={`px-2 py-1 rounded text-[10.5px] font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                    activeRole === 'AGENT' ? 'bg-emerald-800 text-white shadow-xs' : 'text-stone-500 hover:text-stone-900'
+                  }`}
+                >
+                  💼 <span className="hidden lg:inline">Partner Panel</span>
+                </button>
+              </div>
+            )}
             <button
               onClick={() => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))}
               aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
@@ -1557,6 +1584,31 @@ export default function App() {
             </button>
           </div>
         </div>
+
+        {/* Mobile workspace switch — its own slim row so the centred brand row
+            stays uncrowded on small screens. Admin sessions only. */}
+        {session?.role === 'ADMIN' && (
+          <div className="md:hidden px-3 pb-2">
+            <div className="flex p-0.5 bg-stone-100 border border-stone-200 rounded-lg shadow-xs">
+              <button
+                onClick={() => setActiveRole('ADMIN')}
+                className={`flex-1 px-2 py-1.5 rounded text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                  activeRole === 'ADMIN' ? 'bg-emerald-800 text-white shadow-xs' : 'text-stone-500'
+                }`}
+              >
+                👑 Owner/Admin
+              </button>
+              <button
+                onClick={() => setActiveRole('AGENT')}
+                className={`flex-1 px-2 py-1.5 rounded text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                  activeRole === 'AGENT' ? 'bg-emerald-800 text-white shadow-xs' : 'text-stone-500'
+                }`}
+              >
+                💼 Partner Panel
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/*
@@ -1731,6 +1783,30 @@ export default function App() {
                 payouts={payouts.filter(p => p.agentId?.toUpperCase() === session?.agentId?.toUpperCase())}
               />
             )}
+          </div>
+        ) : route.startsWith('/sales-report') ? (
+          /* /sales-report — dense, mobile-first table of the sales ledger.
+             Admins see every booking; a channel partner sees only their own. */
+          <div className="space-y-4">
+            <button
+              onClick={() => navigateTo('/')}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-900 transition-colors cursor-pointer"
+            >
+              ← Back to dashboard
+            </button>
+            <SalesReport
+              users={users}
+              sales={
+                session?.role === 'ADMIN'
+                  ? sales
+                  : sales.filter(s => s.agentId?.toUpperCase() === session?.agentId?.toUpperCase())
+              }
+              scopeNote={
+                session?.role === 'ADMIN'
+                  ? 'Full booking ledger · scroll sideways for all columns'
+                  : 'Your sourced bookings · scroll sideways for all columns'
+              }
+            />
           </div>
         ) : (
           <>

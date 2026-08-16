@@ -981,29 +981,17 @@ export default function AdminPanel({
 
   return (
     <div className="space-y-6">
-      {/* Admin Panel sub tab bar */}
-      <div className="flex flex-wrap p-1.5 bg-stone-100 border border-stone-200/85 rounded-2xl gap-1">
-        <button
-          onClick={() => setActiveSubTab('SETTINGS')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
-            activeSubTab === 'SETTINGS' ? 'bg-emerald-800 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
-          }`}
-        >
-          <Settings className="w-4 h-4" /> Compensation & Incentives
-        </button>
-        <button
-          onClick={() => setActiveSubTab('AGENTS')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
-            activeSubTab === 'AGENTS' ? 'bg-emerald-800 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
-          }`}
-        >
-          <Users className="w-4 h-4" /> Onboard Sponsors (SBR)
-        </button>
-        <button
-          onClick={() => setActiveSubTab('PROJECTS')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
-            activeSubTab === 'PROJECTS' ? 'bg-emerald-800 text-white shadow-sm' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
-          }`}
+      {/* Admin Panel sub tab bar.
+          Mobile: one horizontally-scrollable row of compact pills (short labels,
+          active pill auto-centred) + a context line naming the active section.
+          Desktop (sm+): wraps into the familiar multi-row bar with full labels.
+          NOTE: the ui/edit merge repeatedly reintroduces the old hardcoded
+          buttons here, interleaving them with this ADMIN_TABS bar and leaving an
+          unclosed <button> that breaks the build. Keep this single map. */}
+      <div className="bg-stone-100 border border-stone-200 rounded-2xl overflow-hidden">
+        <div
+          ref={tabBarRef}
+          className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-x-visible gap-1 p-1.5 custom-scrollbar"
         >
           {ADMIN_TABS.map(({ key, label, shortLabel, icon: Icon }) => (
             <button
@@ -3274,9 +3262,16 @@ export default function AdminPanel({
                     <span className="font-bold text-stone-800">{sale.agentName}</span>
                     <span className="font-mono text-stone-500 block text-[9px]">{sale.agentId}</span>
                   </div>
-                  <div className="col-span-2">
+                  {/* Derived, not the raw stored saleValue — that field holds
+                      rupees on seeded/imported rows, so rendering it as PTS made
+                      this card disagree with the desktop table for the same sale. */}
+                  <div>
+                    <span className="text-stone-400 uppercase font-bold text-[8.5px] block">Total Points</span>
+                    <span className="font-mono font-bold text-emerald-800">{formatPoints(getSalePoints(sale))}</span>
+                  </div>
+                  <div>
                     <span className="text-stone-400 uppercase font-bold text-[8.5px] block">Agreement Price</span>
-                    <span className="font-mono font-bold text-stone-900">{formatPoints(sale.saleValue)}</span>
+                    <span className="font-mono font-bold text-stone-900">{formatINR(getSaleAgreementValueINR(sale))}</span>
                   </div>
                 </div>
 
